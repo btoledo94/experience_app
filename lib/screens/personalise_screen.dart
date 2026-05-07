@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/selected_interests_provider.dart';
 
-class PersonaliseScreen extends StatefulWidget {
+class PersonaliseScreen extends ConsumerWidget {
   const PersonaliseScreen({super.key});
 
-  @override
-  State<PersonaliseScreen> createState() => _PersonaliseScreenState();
-}
-
-class _PersonaliseScreenState extends State<PersonaliseScreen> {
-  final List<String> _interests = [
+  final List<String> _interests = const [
     'User Interface',
     'User Experience',
     'User Research',
@@ -19,25 +16,11 @@ class _PersonaliseScreenState extends State<PersonaliseScreen> {
     'Design Systems',
   ];
 
-  final Set<String> _selected = {
-    'User Interface',
-    'User Research',
-    'Strategy',
-    'Design Systems',
-  };
-
-  void _toggle(String interest) {
-    setState(() {
-      if (_selected.contains(interest)) {
-        _selected.remove(interest);
-      } else {
-        _selected.add(interest);
-      }
-    });
-  }
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Observar el estado de los intereses seleccionados
+    final selectedInterests = ref.watch(selectedInterestsProvider);
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -88,11 +71,15 @@ class _PersonaliseScreenState extends State<PersonaliseScreen> {
                   separatorBuilder: (_, __) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
                     final interest = _interests[index];
-                    final isSelected = _selected.contains(interest);
+                    final isSelected = selectedInterests.contains(interest);
                     return _InterestTile(
                       label: interest,
                       selected: isSelected,
-                      onTap: () => _toggle(interest),
+                      onTap: () {
+                        ref
+                            .read(selectedInterestsProvider.notifier)
+                            .toggle(interest);
+                      },
                     );
                   },
                 ),
@@ -106,7 +93,10 @@ class _PersonaliseScreenState extends State<PersonaliseScreen> {
                 height: 52,
                 child: ElevatedButton(
                   onPressed: () {
-                    // TODO: navigate to next screen
+                    // Los intereses se guardan automáticamente en el estado
+                    debugPrint(
+                      'Intereses seleccionados: ${ref.read(selectedInterestsProvider).toList()}',
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF2962FF),

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/selected_interests_provider.dart';
+import '../state/selected_interests_provider.dart';
 
-class PersonaliseScreen extends ConsumerWidget {
-  const PersonaliseScreen({super.key});
+class PersonaliseView extends ConsumerWidget {
+  const PersonaliseView({super.key});
 
   final List<String> _interests = const [
     'User Interface',
@@ -68,7 +68,7 @@ class PersonaliseScreen extends ConsumerWidget {
               Expanded(
                 child: ListView.separated(
                   itemCount: _interests.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  separatorBuilder: (_, _) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
                     final interest = _interests[index];
                     final isSelected = selectedInterests.contains(interest);
@@ -140,7 +140,7 @@ class _InterestTile extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: selected ? const Color(0xFFEEF2FF) : Colors.white,
           border: Border.all(
             color: selected ? const Color(0xFF2962FF) : const Color(0xFFE0E0E0),
             width: 1.5,

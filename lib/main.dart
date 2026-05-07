@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'screens/onboarding_screen.dart';
+import 'core/navigation/router.dart';
 
 void main() {
   runApp(const ProviderScope(child: MainApp()));
@@ -11,9 +11,9 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      home: OnboardingScreen(),
+      routerConfig: router,
     );
   }
 }

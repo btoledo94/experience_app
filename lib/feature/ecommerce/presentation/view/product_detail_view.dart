@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../widget/product_detail_carousel.dart';
 import '../widget/size_selector.dart';
 import '../widget/color_selector.dart';
-import '../provider/cart_provider.dart';
+import '../state/cart_provider.dart';
 import '../../domain/entity/cart_item.dart';
 import 'package:uuid/uuid.dart';
 

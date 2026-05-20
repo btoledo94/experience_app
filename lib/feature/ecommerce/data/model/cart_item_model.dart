@@ -1,0 +1,67 @@
+import '../../domain/entity/cart_item.dart';
+
+class CartItemModel {
+  final String id;
+  final String name;
+  final String colorName;
+  final String size;
+  final double price;
+  final int quantity;
+
+  const CartItemModel({
+    required this.id,
+    required this.name,
+    required this.colorName,
+    required this.size,
+    required this.price,
+    required this.quantity,
+  });
+
+  /// Crear modelo desde JSON (almacenamiento local / API)
+  factory CartItemModel.fromJson(Map<String, dynamic> json) {
+    return CartItemModel(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      colorName: json['colorName'] as String,
+      size: json['size'] as String,
+      price: (json['price'] as num).toDouble(),
+      quantity: json['quantity'] as int? ?? 1,
+    );
+  }
+
+  /// Convertir modelo a JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'colorName': colorName,
+      'size': size,
+      'price': price,
+      'quantity': quantity,
+    };
+  }
+
+  /// Crear modelo desde la entidad de dominio
+  factory CartItemModel.fromEntity(CartItem entity) {
+    return CartItemModel(
+      id: entity.id,
+      name: entity.name,
+      colorName: entity.colorName,
+      size: entity.size,
+      price: entity.price,
+      quantity: entity.quantity,
+    );
+  }
+
+  /// Convertir modelo a entidad de dominio
+  CartItem toEntity() {
+    return CartItem(
+      id: id,
+      name: name,
+      colorName: colorName,
+      size: size,
+      price: price,
+      quantity: quantity,
+    );
+  }
+}

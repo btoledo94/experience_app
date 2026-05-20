@@ -1,9 +1,38 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entity/cart_item.dart';
-import '../provider/cart_state.dart';
+import 'cart_state.dart';
+import '../../data/repository/cart_repository.dart';
 
 class CartNotifier extends StateNotifier<CartState> {
+  late CartRepository _repository;
+
   CartNotifier() : super(const CartState());
+
+  /// Inicializar el repositorio con SharedPreferences
+  Future<void> initialize(SharedPreferences prefs) async {
+    _repository = CartRepository(prefs);
+    await loadCart();
+  }
+
+  /// Cargar items guardados del almacenamiento
+  Future<void> loadCart() async {
+    try {
+      final items = await _repository.loadCartItems();
+      state = CartState(items: items);
+    } catch (e) {
+      print('Error loading cart: $e');
+    }
+  }
+
+  /// Guardar el estado actual en almacenamiento
+  Future<void> _saveCart() async {
+    try {
+      await _repository.saveCartItems(state.items);
+    } catch (e) {
+      print('Error saving cart: $e');
+    }
+  }
 
   void addItem(CartItem item) {
     final existingItemIndex = state.items.indexWhere(
@@ -25,12 +54,18 @@ class CartNotifier extends StateNotifier<CartState> {
       // Si es nuevo, agregarlo
       state = state.copyWith(items: [...state.items, item]);
     }
+
+    // Guardar en almacenamiento
+    _saveCart();
   }
 
   void removeItem(String id) {
     state = state.copyWith(
       items: state.items.where((item) => item.id != id).toList(),
     );
+
+    // Guardar en almacenamiento
+    _saveCart();
   }
 
   void updateQuantity(String id, int quantity) {
@@ -44,10 +79,16 @@ class CartNotifier extends StateNotifier<CartState> {
     }).toList();
 
     state = state.copyWith(items: updatedItems);
+
+    // Guardar en almacenamiento
+    _saveCart();
   }
 
   void clearCart() {
     state = const CartState();
+
+    // Limpiar almacenamiento
+    _repository.clearCart();
   }
 }
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../provider/cart_provider.dart';
+import '../state/cart_provider.dart';
 
 class EcommerceAppBar extends ConsumerWidget implements PreferredSizeWidget {
   const EcommerceAppBar({super.key});

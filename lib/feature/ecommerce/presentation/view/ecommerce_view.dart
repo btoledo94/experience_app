@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../domain/entity/product.dart';
+import '../state/product_provider.dart';
 import '../widget/ecommerce_app_bar.dart';
 import '../widget/product_carousel.dart';
 import '../widget/product_section.dart';
@@ -16,43 +19,36 @@ class _EcommerceViewState extends ConsumerState<EcommerceView> {
 
   @override
   Widget build(BuildContext context) {
+    final productsAsync = ref.watch(productsProvider);
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: const EcommerceAppBar(),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              // Product Carousel
-              const ProductCarousel(),
-              const SizedBox(height: 24),
+        child: productsAsync.when(
+          data: (products) => SingleChildScrollView(
+            child: Column(
+              children: [
+                // Product Carousel
+                const ProductCarousel(),
+                const SizedBox(height: 24),
 
-              // Perfect for you section
-              ProductSection(
-                title: 'Perfect for you',
-                products: [
-                  const ProductData(name: 'Amazing T-Shirt', price: '€ 12.00'),
-                  const ProductData(name: 'Fabulous Pants', price: '€ 15.00'),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // For this summer section
-              ProductSection(
-                title: 'For this summer',
-                products: [
-                  const ProductData(name: 'Summer Shirt', price: '€ 18.00'),
-                  const ProductData(name: 'Beach Shorts', price: '€ 20.00'),
-                ],
-              ),
-              const SizedBox(height: 24),
-            ],
+                ..._buildProductSections(products),
+              ],
+            ),
           ),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(child: Text('Error loading products: $e')),
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedNavIndex,
-        onTap: (index) => setState(() => _selectedNavIndex = index),
+        onTap: (index) {
+          setState(() => _selectedNavIndex = index);
+          if (index == 1) {
+            context.push('/products');
+          }
+        },
         type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Explore'),
@@ -65,5 +61,55 @@ class _EcommerceViewState extends ConsumerState<EcommerceView> {
         ],
       ),
     );
+  }
+
+  List<Widget> _buildProductSections(List<Product> products) {
+    if (products.isEmpty) {
+      return const [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          child: Text('No products available'),
+        ),
+      ];
+    }
+
+    final categories = <String, List<Product>>{
+      'Everyday essentials': [],
+      'Daily picks': [],
+      'Premium favorites': [],
+    };
+
+    for (final product in products) {
+      if (product.price < 20) {
+        categories['Everyday essentials']!.add(product);
+      } else if (product.price < 60) {
+        categories['Daily picks']!.add(product);
+      } else {
+        categories['Premium favorites']!.add(product);
+      }
+    }
+
+    final widgets = <Widget>[];
+
+    categories.forEach((title, sectionProducts) {
+      if (sectionProducts.isEmpty) return;
+
+      widgets.add(
+        ProductSection(
+          title: title,
+          products: sectionProducts
+              .map(
+                (p) => ProductData(
+                  name: p.name,
+                  price: '€ ${p.price.toStringAsFixed(2)}',
+                ),
+              )
+              .toList(),
+        ),
+      );
+      widgets.add(const SizedBox(height: 24));
+    });
+
+    return widgets;
   }
 }

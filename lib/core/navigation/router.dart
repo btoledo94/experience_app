@@ -3,6 +3,7 @@ import 'package:xpiria_app/feature/onboarding/presentation/view/onboarding_view.
 import 'package:xpiria_app/feature/ecommerce/presentation/view/ecommerce_view.dart';
 import 'package:xpiria_app/feature/ecommerce/presentation/view/product_detail_view.dart';
 import 'package:xpiria_app/feature/ecommerce/presentation/view/cart_view.dart';
+import 'package:xpiria_app/feature/ecommerce/presentation/view/product_list_view.dart';
 
 final router = GoRouter(
   routes: [
@@ -32,6 +33,11 @@ final router = GoRouter(
       path: '/cart',
       builder: (context, state) => const CartView(),
     ),
+    GoRoute(
+      name: Routes.productList,
+      path: '/products',
+      builder: (context, state) => const ProductListView(),
+    ),
   ],
 );
 
@@ -40,4 +46,5 @@ abstract class Routes {
   static const String ecommerce = 'ecommerce';
   static const String productDetail = 'productDetail';
   static const String cart = 'cart';
+  static const String productList = 'productList';
 }

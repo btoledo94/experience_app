@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../repository/cart_repository.dart';
+import '../repository/cart_repository_impl.dart';
+import '../../domain/repository/cart_repository.dart';
 
 final sharedPreferencesProvider = FutureProvider<SharedPreferences>((
   ref,
@@ -10,5 +11,5 @@ final sharedPreferencesProvider = FutureProvider<SharedPreferences>((
 
 final cartRepositoryProvider = FutureProvider<CartRepository>((ref) async {
   final prefs = await ref.watch(sharedPreferencesProvider.future);
-  return CartRepository(prefs);
+  return CartRepositoryImpl(prefs);
 });

@@ -52,22 +52,20 @@ class ProductSection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
 
-        // Products grid
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 16,
-              childAspectRatio: 0.85,
-            ),
+        // Horizontal list by section
+        SizedBox(
+          height: 220,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: products.length,
-            itemBuilder: (context, index) => ProductCard(
-              name: products[index].name,
-              price: products[index].price,
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, index) => SizedBox(
+              width: 160,
+              child: ProductCard(
+                name: products[index].name,
+                price: products[index].price,
+              ),
             ),
           ),
         ),

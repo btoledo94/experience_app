@@ -1,21 +1,20 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../domain/entity/cart_item.dart';
 
-class CartItemModel {
-  final String id;
-  final String name;
-  final String colorName;
-  final String size;
-  final double price;
-  final int quantity;
+part 'cart_item_model.freezed.dart';
 
-  const CartItemModel({
-    required this.id,
-    required this.name,
-    required this.colorName,
-    required this.size,
-    required this.price,
-    required this.quantity,
-  });
+@freezed
+class CartItemModel with _$CartItemModel {
+  const CartItemModel._();
+
+  const factory CartItemModel({
+    required String id,
+    required String name,
+    required String colorName,
+    required String size,
+    required double price,
+    @Default(1) int quantity,
+  }) = _CartItemModel;
 
   /// Crear modelo desde JSON (almacenamiento local / API)
   factory CartItemModel.fromJson(Map<String, dynamic> json) {

@@ -14,16 +14,16 @@ void main() async {
   final container = ProviderContainer();
   await container.read(cartProvider.notifier).initialize(prefs);
 
-  runApp(ProviderScope(child: MainApp(container: container)));
+  runApp(
+    UncontrolledProviderScope(container: container, child: const MainApp()),
+  );
 }
 
-class MainApp extends ConsumerWidget {
-  final ProviderContainer container;
-
-  const MainApp({super.key, required this.container});
+class MainApp extends StatelessWidget {
+  const MainApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       routerConfig: router,

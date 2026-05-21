@@ -1,16 +1,18 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entity/cart_item.dart';
+import '../../domain/repository/cart_repository.dart';
 import '../model/cart_item_model.dart';
 
-class CartRepository {
+class CartRepositoryImpl implements CartRepository {
   static const String _cartKey = 'xpiria_cart_items';
 
   final SharedPreferences _prefs;
 
-  CartRepository(this._prefs);
+  CartRepositoryImpl(this._prefs);
 
   /// Guardar lista de items en almacenamiento local
+  @override
   Future<void> saveCartItems(List<CartItem> items) async {
     try {
       final jsonList = items
@@ -24,6 +26,7 @@ class CartRepository {
   }
 
   /// Cargar lista de items del almacenamiento local
+  @override
   Future<List<CartItem>> loadCartItems() async {
     try {
       final jsonString = _prefs.getString(_cartKey);
@@ -45,6 +48,7 @@ class CartRepository {
   }
 
   /// Limpiar el carrito del almacenamiento
+  @override
   Future<void> clearCart() async {
     try {
       await _prefs.remove(_cartKey);

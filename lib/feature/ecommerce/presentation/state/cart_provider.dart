@@ -1,8 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entity/cart_item.dart';
+import '../../domain/repository/cart_repository.dart';
 import 'cart_state.dart';
-import '../../data/repository/cart_repository.dart';
+import '../../data/repository/cart_repository_impl.dart';
 
 class CartNotifier extends StateNotifier<CartState> {
   late CartRepository _repository;
@@ -11,7 +12,7 @@ class CartNotifier extends StateNotifier<CartState> {
 
   /// Inicializar el repositorio con SharedPreferences
   Future<void> initialize(SharedPreferences prefs) async {
-    _repository = CartRepository(prefs);
+    _repository = CartRepositoryImpl(prefs);
     await loadCart();
   }
 

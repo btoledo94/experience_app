@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../data/data_sources/product_local_data_source.dart';
 import '../../data/repository/product_repository_impl.dart';
 import '../../domain/entity/product.dart';
 import '../../domain/repository/product_repository.dart';
@@ -8,7 +9,8 @@ final productRepositoryProvider = FutureProvider<ProductRepository>((
   ref,
 ) async {
   final prefs = await SharedPreferences.getInstance();
-  final repo = ProductRepositoryImpl(prefs);
+  final localDataSource = ProductLocalDataSource();
+  final repo = ProductRepositoryImpl(prefs, localDataSource);
   await repo.initializeDefaultProducts();
   return repo;
 });

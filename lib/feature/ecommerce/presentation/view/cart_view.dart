@@ -85,11 +85,7 @@ class CartView extends ConsumerWidget {
                         height: 52,
                         child: ElevatedButton(
                           onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Proceeding to checkout...'),
-                              ),
-                            );
+                            context.push('/checkout/shipping');
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF2962FF),

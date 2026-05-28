@@ -1,32 +1,11 @@
 import 'package:dio/dio.dart';
-
-class PaymentResult {
-  final bool success;
-  final String status;
-  final String message;
-  final String? transactionId;
-
-  const PaymentResult({
-    required this.success,
-    required this.status,
-    required this.message,
-    this.transactionId,
-  });
-
-  factory PaymentResult.fromJson(Map<String, dynamic> json) {
-    return PaymentResult(
-      success: (json['success'] as bool?) ?? false,
-      status: (json['status'] as String?) ?? 'error',
-      message: (json['message'] as String?) ?? 'Unexpected payment response.',
-      transactionId: json['transactionId'] as String?,
-    );
-  }
-}
+import '../model/payment_result_model.dart';
+import '../../domain/entity/payment_result.dart';
 
 class PaymentRemoteDataSource {
   final Dio _dio = Dio(
     BaseOptions(
-      baseUrl: 'https://enyoi-51248.web.app',
+      baseUrl: 'https://processpayment-sfdkfoab2q-uc.a.run.app',
       connectTimeout: const Duration(seconds: 15),
       receiveTimeout: const Duration(seconds: 15),
       headers: {'Content-Type': 'application/json'},
@@ -49,7 +28,9 @@ class PaymentRemoteDataSource {
       );
 
       if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
-        return PaymentResult.fromJson(response.data as Map<String, dynamic>);
+        return PaymentResultModel.fromJson(
+          response.data as Map<String, dynamic>,
+        ).toEntity();
       }
 
       return const PaymentResult(

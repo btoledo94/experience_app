@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../data/data_sources/payment_remote_data_source.dart';
 import '../../domain/entity/payment_card.dart';
 import '../state/cart_provider.dart';
 import '../state/payment_cards_provider.dart';
+import '../state/payment_provider.dart';
 import '../widget/checkout_stepper.dart';
 
 class PaymentView extends ConsumerStatefulWidget {
@@ -136,11 +136,12 @@ class _PaymentViewState extends ConsumerState<PaymentView> {
     setState(() => _isProcessing = true);
 
     try {
-      final dataSource = PaymentRemoteDataSource();
-      final result = await dataSource.processPayment(
-        amount: amount,
-        cardNumber: savedCards[_selectedCard].number,
-      );
+      final result = await ref
+          .read(paymentNotifierProvider)
+          .processPayment(
+            amount: amount,
+            cardNumber: savedCards[_selectedCard].number,
+          );
 
       if (!mounted) {
         return;

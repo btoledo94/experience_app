@@ -53,7 +53,7 @@ class ProductLocalDataSource {
         id: '6',
         name: 'T-Shirt VI',
         description: 'Stylish T-Shirt for every occasion.',
-        price: 75.0,
+        price: 50.0,
         imageUrl: '',
         colors: ['Blue', 'White', 'Grey'],
         sizes: ['S', 'M', 'L', 'XL'],

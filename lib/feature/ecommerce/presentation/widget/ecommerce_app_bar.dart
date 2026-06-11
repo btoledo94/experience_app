@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:xpiria_app/feature/auth/presentation/state/auth_provider.dart';
 import '../state/cart_provider.dart';
 
 class EcommerceAppBar extends ConsumerWidget implements PreferredSizeWidget {
@@ -22,6 +23,12 @@ class EcommerceAppBar extends ConsumerWidget implements PreferredSizeWidget {
         IconButton(
           icon: const Icon(Icons.favorite_outline, color: Colors.black),
           onPressed: () {},
+        ),
+        IconButton(
+          icon: const Icon(Icons.logout, color: Colors.black),
+          onPressed: () async {
+            await ref.read(authControllerProvider.notifier).signOut();
+          },
         ),
         Stack(
           children: [

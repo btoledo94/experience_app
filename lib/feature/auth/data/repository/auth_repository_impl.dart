@@ -9,6 +9,13 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl(this._dataSource);
 
   @override
+  AuthUser? get currentUser {
+    final user = _dataSource.currentUser;
+    if (user == null) return null;
+    return AuthUserModel.fromFirebaseUser(user).toEntity();
+  }
+
+  @override
   Stream<AuthUser?> authStateChanges() {
     return _dataSource.authStateChanges().map((user) {
       if (user == null) return null;

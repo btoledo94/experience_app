@@ -1,6 +1,8 @@
 import '../entity/auth_user.dart';
 
 abstract class AuthRepository {
+  AuthUser? get currentUser;
+
   Stream<AuthUser?> authStateChanges();
 
   Future<AuthUser?> createUserWithEmailAndPassword({

@@ -102,6 +102,9 @@ class _EcommerceViewState extends ConsumerState<EcommerceView> {
                 (p) => ProductData(
                   name: p.name,
                   price: '€ ${p.price.toStringAsFixed(2)}',
+                  description: p.description,
+                  colors: p.colors,
+                  sizes: p.sizes,
                 ),
               )
               .toList(),

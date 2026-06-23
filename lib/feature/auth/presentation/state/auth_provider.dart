@@ -5,6 +5,11 @@ import '../../data/data_sources/firebase_auth_data_source.dart';
 import '../../data/repository/auth_repository_impl.dart';
 import '../../domain/entity/auth_user.dart';
 import '../../domain/repository/auth_repository.dart';
+import '../../domain/use_cases/get_current_auth_user_use_case.dart';
+import '../../domain/use_cases/sign_in_use_case.dart';
+import '../../domain/use_cases/sign_out_use_case.dart';
+import '../../domain/use_cases/sign_up_use_case.dart';
+import '../../domain/use_cases/watch_auth_state_use_case.dart';
 
 final firebaseAuthProvider = Provider<FirebaseAuth>((ref) {
   return FirebaseAuth.instance;
@@ -20,23 +25,50 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepositoryImpl(dataSource);
 });
 
-final authStateProvider = StreamProvider<AuthUser?>((ref) {
+final getCurrentAuthUserUseCaseProvider = Provider<GetCurrentAuthUserUseCase>((
+  ref,
+) {
   final repository = ref.watch(authRepositoryProvider);
-  return repository.authStateChanges();
+  return GetCurrentAuthUserUseCase(repository);
+});
+
+final watchAuthStateUseCaseProvider = Provider<WatchAuthStateUseCase>((ref) {
+  final repository = ref.watch(authRepositoryProvider);
+  return WatchAuthStateUseCase(repository);
+});
+
+final signInUseCaseProvider = Provider<SignInUseCase>((ref) {
+  final repository = ref.watch(authRepositoryProvider);
+  return SignInUseCase(repository);
+});
+
+final signUpUseCaseProvider = Provider<SignUpUseCase>((ref) {
+  final repository = ref.watch(authRepositoryProvider);
+  return SignUpUseCase(repository);
+});
+
+final signOutUseCaseProvider = Provider<SignOutUseCase>((ref) {
+  final repository = ref.watch(authRepositoryProvider);
+  return SignOutUseCase(repository);
+});
+
+final authStateProvider = StreamProvider<AuthUser?>((ref) {
+  final watchAuthState = ref.watch(watchAuthStateUseCaseProvider);
+  return watchAuthState();
 });
 
 class AuthController extends StateNotifier<AsyncValue<void>> {
-  final AuthRepository _repository;
+  final SignUpUseCase _signUpUseCase;
+  final SignInUseCase _signInUseCase;
+  final SignOutUseCase _signOutUseCase;
 
-  AuthController(this._repository) : super(const AsyncData(null));
+  AuthController(this._signUpUseCase, this._signInUseCase, this._signOutUseCase)
+    : super(const AsyncData(null));
 
   Future<void> signUp({required String email, required String password}) async {
     state = const AsyncLoading();
     try {
-      await _repository.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      await _signUpUseCase(email: email, password: password);
       state = const AsyncData(null);
     } catch (error, stackTrace) {
       state = AsyncError(error, stackTrace);
@@ -47,10 +79,7 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
   Future<void> signIn({required String email, required String password}) async {
     state = const AsyncLoading();
     try {
-      await _repository.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      await _signInUseCase(email: email, password: password);
       state = const AsyncData(null);
     } catch (error, stackTrace) {
       state = AsyncError(error, stackTrace);
@@ -61,7 +90,7 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
   Future<void> signOut() async {
     state = const AsyncLoading();
     try {
-      await _repository.signOut();
+      await _signOutUseCase();
       state = const AsyncData(null);
     } catch (error, stackTrace) {
       state = AsyncError(error, stackTrace);
@@ -72,6 +101,8 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
 
 final authControllerProvider =
     StateNotifierProvider<AuthController, AsyncValue<void>>((ref) {
-      final repository = ref.watch(authRepositoryProvider);
-      return AuthController(repository);
+      final signUpUseCase = ref.watch(signUpUseCaseProvider);
+      final signInUseCase = ref.watch(signInUseCaseProvider);
+      final signOutUseCase = ref.watch(signOutUseCaseProvider);
+      return AuthController(signUpUseCase, signInUseCase, signOutUseCase);
     });

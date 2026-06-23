@@ -3,14 +3,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entity/product.dart';
 import '../../domain/repository/product_repository.dart';
 import '../data_sources/product_local_data_source.dart';
+import '../data_sources/product_remote_data_source.dart';
 import '../model/product_model.dart';
 
 class ProductRepositoryImpl implements ProductRepository {
   static const String _productsKey = 'xpiria_products';
   final SharedPreferences _prefs;
   final ProductLocalDataSource _localDataSource;
+  final ProductRemoteDataSource _remoteDataSource;
 
-  ProductRepositoryImpl(this._prefs, this._localDataSource);
+  ProductRepositoryImpl(
+    this._prefs,
+    this._localDataSource,
+    this._remoteDataSource,
+  );
 
   @override
   Future<void> saveProducts(List<Product> products) async {
@@ -19,6 +25,12 @@ class ProductRepositoryImpl implements ProductRepository {
         .toList();
     final jsonString = jsonEncode(jsonList);
     await _prefs.setString(_productsKey, jsonString);
+  }
+
+  @override
+  Future<List<Product>> fetchRemoteProducts() async {
+    final models = await _remoteDataSource.fetchProducts();
+    return models.map((m) => m.toEntity()).toList();
   }
 
   @override

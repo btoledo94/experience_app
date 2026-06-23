@@ -4,15 +4,31 @@ import 'package:go_router/go_router.dart';
 class ProductCard extends StatelessWidget {
   final String name;
   final String price;
+  final String description;
+  final List<String> colors;
+  final List<String> sizes;
 
-  const ProductCard({super.key, required this.name, required this.price});
+  const ProductCard({
+    super.key,
+    required this.name,
+    required this.price,
+    this.description = '',
+    this.colors = const [],
+    this.sizes = const [],
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => context.pushNamed(
         'productDetail',
-        extra: {'name': name, 'price': price},
+        extra: {
+          'name': name,
+          'price': price,
+          'description': description,
+          'colors': colors,
+          'sizes': sizes,
+        },
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

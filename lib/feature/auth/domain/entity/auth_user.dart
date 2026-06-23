@@ -1,6 +1,8 @@
-class AuthUser {
-  final String uid;
-  final String? email;
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-  const AuthUser({required this.uid, this.email});
+part 'auth_user.freezed.dart';
+
+@freezed
+class AuthUser with _$AuthUser {
+  const factory AuthUser({required String uid, String? email}) = _AuthUser;
 }

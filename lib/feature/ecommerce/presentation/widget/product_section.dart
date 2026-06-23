@@ -4,8 +4,17 @@ import 'product_card.dart';
 class ProductData {
   final String name;
   final String price;
+  final String description;
+  final List<String> colors;
+  final List<String> sizes;
 
-  const ProductData({required this.name, required this.price});
+  const ProductData({
+    required this.name,
+    required this.price,
+    this.description = '',
+    this.colors = const [],
+    this.sizes = const [],
+  });
 }
 
 class ProductSection extends StatelessWidget {
@@ -65,6 +74,9 @@ class ProductSection extends StatelessWidget {
               child: ProductCard(
                 name: products[index].name,
                 price: products[index].price,
+                description: products[index].description,
+                colors: products[index].colors,
+                sizes: products[index].sizes,
               ),
             ),
           ),

@@ -23,7 +23,7 @@ class ProductModel with _$ProductModel {
       name: json['name'] as String,
       description: json['description'] as String,
       price: (json['price'] as num).toDouble(),
-      imageUrl: json['imageUrl'] as String,
+      imageUrl: json['imageUrl'] as String? ?? '',
       colors: List<String>.from(json['colors'] ?? []),
       sizes: List<String>.from(json['sizes'] ?? []),
     );

@@ -1,6 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/data_sources/product_local_data_source.dart';
+import '../../data/data_sources/product_remote_data_source.dart';
 import '../../data/repository/product_repository_impl.dart';
 import '../../domain/entity/product.dart';
 import '../../domain/repository/product_repository.dart';
@@ -10,7 +12,8 @@ final productRepositoryProvider = FutureProvider<ProductRepository>((
 ) async {
   final prefs = await SharedPreferences.getInstance();
   final localDataSource = ProductLocalDataSource();
-  final repo = ProductRepositoryImpl(prefs, localDataSource);
+  final remoteDataSource = ProductRemoteDataSource(FirebaseFirestore.instance);
+  final repo = ProductRepositoryImpl(prefs, localDataSource, remoteDataSource);
   await repo.initializeDefaultProducts();
   return repo;
 });
@@ -19,6 +22,16 @@ class ProductsNotifier extends AsyncNotifier<List<Product>> {
   @override
   Future<List<Product>> build() async {
     final repo = await ref.watch(productRepositoryProvider.future);
+    // Intenta Firestore primero; si falla usa los productos locales
+    try {
+      final remote = await repo.fetchRemoteProducts();
+      if (remote.isNotEmpty) {
+        await repo.saveProducts(remote);
+        return remote;
+      }
+    } catch (_) {
+      // Firestore no disponible: usar caché local
+    }
     return repo.loadProducts();
   }
 
@@ -26,6 +39,13 @@ class ProductsNotifier extends AsyncNotifier<List<Product>> {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final repo = await ref.read(productRepositoryProvider.future);
+      try {
+        final remote = await repo.fetchRemoteProducts();
+        if (remote.isNotEmpty) {
+          await repo.saveProducts(remote);
+          return remote;
+        }
+      } catch (_) {}
       return repo.loadProducts();
     });
   }

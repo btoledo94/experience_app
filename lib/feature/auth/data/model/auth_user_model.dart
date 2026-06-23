@@ -1,12 +1,16 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../domain/entity/auth_user.dart';
 
-class AuthUserModel {
-  final String uid;
-  final String? email;
+part 'auth_user_model.freezed.dart';
 
-  const AuthUserModel({required this.uid, this.email});
+@freezed
+class AuthUserModel with _$AuthUserModel {
+  const AuthUserModel._();
+
+  const factory AuthUserModel({required String uid, String? email}) =
+      _AuthUserModel;
 
   factory AuthUserModel.fromFirebaseUser(User user) {
     return AuthUserModel(uid: user.uid, email: user.email);

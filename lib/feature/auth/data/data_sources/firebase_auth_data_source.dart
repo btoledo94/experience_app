@@ -5,6 +5,8 @@ class FirebaseAuthDataSource {
 
   FirebaseAuthDataSource(this._firebaseAuth);
 
+  User? get currentUser => _firebaseAuth.currentUser;
+
   Stream<User?> authStateChanges() => _firebaseAuth.authStateChanges();
 
   Future<User?> createUserWithEmailAndPassword({

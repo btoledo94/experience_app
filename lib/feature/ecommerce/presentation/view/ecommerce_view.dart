@@ -103,6 +103,7 @@ class _EcommerceViewState extends ConsumerState<EcommerceView> {
                   name: p.name,
                   price: '€ ${p.price.toStringAsFixed(2)}',
                   description: p.description,
+                  imageUrl: p.imageUrl,
                   colors: p.colors,
                   sizes: p.sizes,
                 ),

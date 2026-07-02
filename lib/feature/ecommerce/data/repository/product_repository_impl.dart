@@ -34,6 +34,39 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
+  Future<Product> createProduct(Product product) async {
+    final createdModel = await _remoteDataSource.createProduct(
+      ProductModel.fromEntity(product),
+    );
+    final created = createdModel.toEntity();
+
+    final local = await loadProducts();
+    await saveProducts([...local, created]);
+    return created;
+  }
+
+  @override
+  Future<Product> updateProduct(Product product) async {
+    final updatedModel = await _remoteDataSource.updateProduct(
+      ProductModel.fromEntity(product),
+    );
+    final updated = updatedModel.toEntity();
+
+    final local = await loadProducts();
+    final merged = local.map((p) => p.id == updated.id ? updated : p).toList();
+    await saveProducts(merged);
+    return updated;
+  }
+
+  @override
+  Future<void> deleteProduct(String productId) async {
+    await _remoteDataSource.deleteProduct(productId);
+    final local = await loadProducts();
+    final filtered = local.where((p) => p.id != productId).toList();
+    await saveProducts(filtered);
+  }
+
+  @override
   Future<List<Product>> loadProducts() async {
     final jsonString = _prefs.getString(_productsKey);
     if (jsonString == null || jsonString.isEmpty) {

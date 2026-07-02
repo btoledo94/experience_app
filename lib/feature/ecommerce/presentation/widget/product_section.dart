@@ -5,6 +5,7 @@ class ProductData {
   final String name;
   final String price;
   final String description;
+  final String imageUrl;
   final List<String> colors;
   final List<String> sizes;
 
@@ -12,6 +13,7 @@ class ProductData {
     required this.name,
     required this.price,
     this.description = '',
+    this.imageUrl = '',
     this.colors = const [],
     this.sizes = const [],
   });
@@ -75,6 +77,7 @@ class ProductSection extends StatelessWidget {
                 name: products[index].name,
                 price: products[index].price,
                 description: products[index].description,
+                imageUrl: products[index].imageUrl,
                 colors: products[index].colors,
                 sizes: products[index].sizes,
               ),

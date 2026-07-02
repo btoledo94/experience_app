@@ -12,6 +12,7 @@ class ProductDetailView extends ConsumerStatefulWidget {
   final String productName;
   final String productPrice;
   final String productDescription;
+  final String productImageUrl;
   final List<String> productColors;
   final List<String> productSizes;
 
@@ -20,6 +21,7 @@ class ProductDetailView extends ConsumerStatefulWidget {
     required this.productName,
     required this.productPrice,
     this.productDescription = '',
+    this.productImageUrl = '',
     this.productColors = const [],
     this.productSizes = const [],
   });
@@ -68,7 +70,7 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
           // Image area with overlaid buttons
           Stack(
             children: [
-              const ProductDetailCarousel(),
+              ProductDetailCarousel(imageUrl: widget.productImageUrl),
               SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(

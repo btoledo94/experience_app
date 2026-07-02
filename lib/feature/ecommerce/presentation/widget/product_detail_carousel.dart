@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class ProductDetailCarousel extends StatefulWidget {
-  const ProductDetailCarousel({super.key});
+  final String imageUrl;
+
+  const ProductDetailCarousel({super.key, this.imageUrl = ''});
 
   @override
   State<ProductDetailCarousel> createState() => _ProductDetailCarouselState();
@@ -10,6 +12,11 @@ class ProductDetailCarousel extends StatefulWidget {
 class _ProductDetailCarouselState extends State<ProductDetailCarousel> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  static const _imageRequestHeaders = {
+    'User-Agent':
+        'Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Mobile Safari/537.36',
+    'Referer': 'https://www.somosmamas.com.ar/',
+  };
 
   @override
   void dispose() {
@@ -19,6 +26,9 @@ class _ProductDetailCarouselState extends State<ProductDetailCarousel> {
 
   @override
   Widget build(BuildContext context) {
+    final hasImage = _isValidNetworkImageUrl(widget.imageUrl);
+    final itemCount = hasImage ? 1 : 4;
+
     return Column(
       children: [
         // Carousel
@@ -27,16 +37,39 @@ class _ProductDetailCarouselState extends State<ProductDetailCarousel> {
           child: PageView.builder(
             controller: _pageController,
             onPageChanged: (index) => setState(() => _currentPage = index),
-            itemCount: 4,
+            itemCount: itemCount,
             itemBuilder: (context, index) => Container(
               color: const Color(0xFFEAF0FB),
-              child: const Center(
-                child: Icon(
-                  Icons.image_outlined,
-                  size: 100,
-                  color: Color(0xFFB0BEC5),
-                ),
-              ),
+              child: hasImage
+                  ? Image.network(
+                      widget.imageUrl,
+                      headers: _imageRequestHeaders,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => const Center(
+                        child: Icon(
+                          Icons.broken_image_outlined,
+                          size: 100,
+                          color: Color(0xFFB0BEC5),
+                        ),
+                      ),
+                      loadingBuilder: (context, child, progress) {
+                        if (progress == null) return child;
+                        return const Center(
+                          child: SizedBox(
+                            width: 28,
+                            height: 28,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        );
+                      },
+                    )
+                  : const Center(
+                      child: Icon(
+                        Icons.image_outlined,
+                        size: 100,
+                        color: Color(0xFFB0BEC5),
+                      ),
+                    ),
             ),
           ),
         ),
@@ -45,7 +78,7 @@ class _ProductDetailCarouselState extends State<ProductDetailCarousel> {
         // Dots
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(4, (index) {
+          children: List.generate(itemCount, (index) {
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: AnimatedContainer(
@@ -65,4 +98,12 @@ class _ProductDetailCarouselState extends State<ProductDetailCarousel> {
       ],
     );
   }
+}
+
+bool _isValidNetworkImageUrl(String value) {
+  final uri = Uri.tryParse(value.trim());
+  return uri != null &&
+      uri.isAbsolute &&
+      (uri.scheme == 'http' || uri.scheme == 'https') &&
+      uri.host.isNotEmpty;
 }

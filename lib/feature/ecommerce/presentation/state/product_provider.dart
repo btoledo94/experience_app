@@ -58,6 +58,77 @@ class ProductsNotifier extends AsyncNotifier<List<Product>> {
       return repo.loadProducts();
     });
   }
+
+  Future<void> addProduct({
+    required String name,
+    required String description,
+    required double price,
+    String imageUrl = '',
+    List<String> colors = const [],
+    List<String> sizes = const [],
+  }) async {
+    final previous = state;
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final repo = await ref.read(productRepositoryProvider.future);
+      final created = await repo.createProduct(
+        Product(
+          id: '',
+          name: name,
+          description: description,
+          price: price,
+          imageUrl: imageUrl,
+          colors: colors,
+          sizes: sizes,
+        ),
+      );
+
+      final current = previous.value ?? await repo.loadProducts();
+      return [...current, created];
+    });
+  }
+
+  Future<void> updateProduct({
+    required String id,
+    required String name,
+    required String description,
+    required double price,
+    String imageUrl = '',
+    List<String> colors = const [],
+    List<String> sizes = const [],
+  }) async {
+    final previous = state;
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final repo = await ref.read(productRepositoryProvider.future);
+      final updated = await repo.updateProduct(
+        Product(
+          id: id,
+          name: name,
+          description: description,
+          price: price,
+          imageUrl: imageUrl,
+          colors: colors,
+          sizes: sizes,
+        ),
+      );
+
+      final current = previous.value ?? await repo.loadProducts();
+      return current.map((p) => p.id == id ? updated : p).toList();
+    });
+  }
+
+  Future<void> deleteProduct(String productId) async {
+    final previous = state;
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final repo = await ref.read(productRepositoryProvider.future);
+      await repo.deleteProduct(productId);
+
+      final current = previous.value ?? await repo.loadProducts();
+      return current.where((p) => p.id != productId).toList();
+    });
+  }
 }
 
 final productsProvider = AsyncNotifierProvider<ProductsNotifier, List<Product>>(

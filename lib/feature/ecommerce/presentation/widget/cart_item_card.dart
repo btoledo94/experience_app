@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entity/cart_item.dart';
-import '../provider/cart_provider.dart';
+import '../state/cart_provider.dart';
 
 class CartItemCard extends ConsumerWidget {
   final CartItem item;

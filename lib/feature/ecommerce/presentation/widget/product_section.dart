@@ -4,8 +4,19 @@ import 'product_card.dart';
 class ProductData {
   final String name;
   final String price;
+  final String description;
+  final String imageUrl;
+  final List<String> colors;
+  final List<String> sizes;
 
-  const ProductData({required this.name, required this.price});
+  const ProductData({
+    required this.name,
+    required this.price,
+    this.description = '',
+    this.imageUrl = '',
+    this.colors = const [],
+    this.sizes = const [],
+  });
 }
 
 class ProductSection extends StatelessWidget {
@@ -52,22 +63,24 @@ class ProductSection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
 
-        // Products grid
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 16,
-              childAspectRatio: 0.85,
-            ),
+        // Horizontal list by section
+        SizedBox(
+          height: 220,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: products.length,
-            itemBuilder: (context, index) => ProductCard(
-              name: products[index].name,
-              price: products[index].price,
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            itemBuilder: (context, index) => SizedBox(
+              width: 160,
+              child: ProductCard(
+                name: products[index].name,
+                price: products[index].price,
+                description: products[index].description,
+                imageUrl: products[index].imageUrl,
+                colors: products[index].colors,
+                sizes: products[index].sizes,
+              ),
             ),
           ),
         ),

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "986310523307",
+    "project_id": "ecommerce-3a44a",
+    "storage_bucket": "ecommerce-3a44a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:986310523307:android:9b5845e14848e4b0cbfaee",
+        "android_client_info": {
+          "package_name": "com.example.xpiria_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB4AGO06irTXD-1I-0AUlkEzCRcvsFTxkY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

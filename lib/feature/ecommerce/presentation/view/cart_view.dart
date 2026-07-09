@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../provider/cart_provider.dart';
+import '../state/cart_provider.dart';
 import '../widget/cart_item_card.dart';
 
 class CartView extends ConsumerWidget {
@@ -85,11 +85,7 @@ class CartView extends ConsumerWidget {
                         height: 52,
                         child: ElevatedButton(
                           onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Proceeding to checkout...'),
-                              ),
-                            );
+                            context.push('/checkout/shipping');
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF2962FF),

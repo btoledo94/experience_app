@@ -4,18 +4,26 @@ import 'package:go_router/go_router.dart';
 import '../widget/product_detail_carousel.dart';
 import '../widget/size_selector.dart';
 import '../widget/color_selector.dart';
-import '../provider/cart_provider.dart';
+import '../state/cart_provider.dart';
 import '../../domain/entity/cart_item.dart';
 import 'package:uuid/uuid.dart';
 
 class ProductDetailView extends ConsumerStatefulWidget {
   final String productName;
   final String productPrice;
+  final String productDescription;
+  final String productImageUrl;
+  final List<String> productColors;
+  final List<String> productSizes;
 
   const ProductDetailView({
     super.key,
     required this.productName,
     required this.productPrice,
+    this.productDescription = '',
+    this.productImageUrl = '',
+    this.productColors = const [],
+    this.productSizes = const [],
   });
 
   @override
@@ -27,13 +35,31 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
   String? _selectedColor;
   bool _isFavorite = false;
 
-  final List<String> sizes = ['XS', 'S', 'M', 'L', 'XL'];
-  final List<Color> colors = [
-    const Color(0xFF1A1A2E),
-    const Color(0xFF757575),
-    const Color(0xFFE0E0E0),
-    const Color(0xFFC9C9C9),
+  List<String> get sizes => widget.productSizes.isNotEmpty
+      ? widget.productSizes
+      : ['S', 'M', 'L', 'XL'];
+
+  List<String> get colorNames => widget.productColors.isNotEmpty
+      ? widget.productColors
+      : ['Black', 'Grey', 'White'];
+
+  static const _colorPalette = [
+    Color(0xFF1A1A2E),
+    Color(0xFF757575),
+    Color(0xFFE0E0E0),
+    Color(0xFFC9C9C9),
+    Color(0xFF2962FF),
+    Color(0xFFFFFFFF),
+    Color(0xFF4CAF50),
+    Color(0xFFF44336),
   ];
+
+  List<Color> get colors => List.generate(
+    colorNames.length,
+    (i) => i < _colorPalette.length
+        ? _colorPalette[i]
+        : _colorPalette[i % _colorPalette.length],
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +70,7 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
           // Image area with overlaid buttons
           Stack(
             children: [
-              const ProductDetailCarousel(),
+              ProductDetailCarousel(imageUrl: widget.productImageUrl),
               SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
@@ -116,9 +142,11 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
                         const SizedBox(height: 16),
 
                         // Description
-                        const Text(
-                          'The perfect t-shirt for when you want to feel comfortable but still stylish. Amazing for all occasions. Made of 100% cotton fabric in four colours. Its modern style gives a lighter look for the day. Perfect for the warmest days.',
-                          style: TextStyle(
+                        Text(
+                          widget.productDescription.isNotEmpty
+                              ? widget.productDescription
+                              : 'Sin descripción disponible.',
+                          style: const TextStyle(
                             fontSize: 13,
                             color: Color(0xFF9E9E9E),
                             height: 1.5,
@@ -196,20 +224,18 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
                     }
 
                     final cartNotifier = ref.read(cartProvider.notifier);
-                    final colorNames = [
-                      'Black',
-                      'Grey',
-                      'Light Grey',
-                      'Light Grey',
-                    ];
+                    final selectedColorIndex = colors.indexWhere(
+                      (c) => c.value.toString() == _selectedColor,
+                    );
 
                     final item = CartItem(
                       id: const Uuid().v4(),
                       name: widget.productName,
                       colorName:
-                          colorNames[colors.indexWhere(
-                            (c) => c.value.toString() == _selectedColor,
-                          )],
+                          selectedColorIndex >= 0 &&
+                              selectedColorIndex < colorNames.length
+                          ? colorNames[selectedColorIndex]
+                          : 'Default',
                       size: _selectedSize!,
                       price: double.parse(
                         widget.productPrice

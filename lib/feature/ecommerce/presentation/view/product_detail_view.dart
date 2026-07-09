@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:xpiria_app/feature/auth/domain/entity/app_role.dart';
+import 'package:xpiria_app/feature/auth/presentation/state/auth_provider.dart';
 import '../widget/product_detail_carousel.dart';
 import '../widget/size_selector.dart';
 import '../widget/color_selector.dart';
@@ -63,6 +65,10 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
 
   @override
   Widget build(BuildContext context) {
+    final canBuy =
+        ref.watch(currentUserProfileProvider).valueOrNull?.role.canBuy ??
+        false;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Column(
@@ -187,12 +193,12 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
                           selectedColorIndex: _selectedColor != null
                               ? colors.indexWhere(
                                   (color) =>
-                                      color.value.toString() == _selectedColor,
+                                      color.toARGB32().toString() == _selectedColor,
                                 )
                               : -1,
                           onColorSelected: (index) => setState(
                             () =>
-                                _selectedColor = colors[index].value.toString(),
+                                _selectedColor = colors[index].toARGB32().toString(),
                           ),
                         ),
                       ],
@@ -205,7 +211,8 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
           ),
 
           // Add to bag button
-          SafeArea(
+          if (canBuy)
+            SafeArea(
             top: false,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -225,7 +232,7 @@ class _ProductDetailViewState extends ConsumerState<ProductDetailView> {
 
                     final cartNotifier = ref.read(cartProvider.notifier);
                     final selectedColorIndex = colors.indexWhere(
-                      (c) => c.value.toString() == _selectedColor,
+                      (c) => c.toARGB32().toString() == _selectedColor,
                     );
 
                     final item = CartItem(

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:xpiria_app/feature/auth/presentation/state/auth_provider.dart';
 import '../../domain/entity/payment_card.dart';
 import '../state/cart_provider.dart';
+import '../state/finance_provider.dart';
 import '../state/payment_cards_provider.dart';
 import '../state/payment_provider.dart';
 import '../widget/checkout_stepper.dart';
@@ -148,6 +150,20 @@ class _PaymentViewState extends ConsumerState<PaymentView> {
       }
 
       if (result.success && result.status == 'approved') {
+        final user = ref.read(authStateProvider).valueOrNull;
+        if (user != null) {
+          await ref
+              .read(financeRepositoryProvider)
+              .recordApprovedTransaction(
+                userId: user.uid,
+                amount: amount,
+                currency: 'USD',
+                status: result.status,
+                message: result.message,
+                items: cartState.items,
+              );
+        }
+
         ref.read(cartProvider.notifier).clearCart();
         ScaffoldMessenger.of(
           context,

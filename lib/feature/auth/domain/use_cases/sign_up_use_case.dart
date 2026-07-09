@@ -6,7 +6,10 @@ class SignUpUseCase {
 
   SignUpUseCase(this._repository);
 
-  Future<AuthUser?> call({required String email, required String password}) {
+  Future<AuthUser?> call({
+    required String email,
+    required String password,
+  }) {
     return _repository.createUserWithEmailAndPassword(
       email: email,
       password: password,

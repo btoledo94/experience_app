@@ -1,9 +1,14 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
+import '../../domain/entity/app_role.dart';
+import '../../domain/entity/user_profile.dart';
 
 class FirebaseAuthDataSource {
   final FirebaseAuth _firebaseAuth;
+  final FirebaseFirestore _firestore;
 
-  FirebaseAuthDataSource(this._firebaseAuth);
+  FirebaseAuthDataSource(this._firebaseAuth, this._firestore);
 
   User? get currentUser => _firebaseAuth.currentUser;
 
@@ -18,6 +23,41 @@ class FirebaseAuthDataSource {
       password: password,
     );
     return credential.user;
+  }
+
+  Stream<UserProfile?> watchCurrentUserProfile() {
+    final user = currentUser;
+    if (user == null) return Stream.value(null);
+
+    final email = user.email?.trim();
+    if (email == null || email.isEmpty) return Stream.value(null);
+
+    return _firestore
+        .collection('usuario_perfil')
+        .doc(email)
+        .snapshots()
+        .map((doc) {
+      if (!doc.exists) {
+        return UserProfile(uid: user.uid, correo: email, role: AppRole.buyer);
+      }
+
+      return UserProfile.fromJson(doc.data() ?? {}, uid: user.uid);
+    });
+  }
+
+  Future<UserProfile?> getCurrentUserProfile() async {
+    final user = currentUser;
+    if (user == null) return null;
+
+    final email = user.email?.trim();
+    if (email == null || email.isEmpty) return null;
+
+    final doc = await _firestore.collection('usuario_perfil').doc(email).get();
+    if (!doc.exists) {
+      return UserProfile(uid: user.uid, correo: email, role: AppRole.buyer);
+    }
+
+    return UserProfile.fromJson(doc.data() ?? {}, uid: user.uid);
   }
 
   Future<User?> signInWithEmailAndPassword({

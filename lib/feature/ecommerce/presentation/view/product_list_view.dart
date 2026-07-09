@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:xpiria_app/feature/auth/domain/entity/app_role.dart';
+import 'package:xpiria_app/feature/auth/presentation/state/auth_provider.dart';
 import '../state/product_provider.dart';
 
 class ProductListView extends ConsumerWidget {
@@ -9,21 +11,25 @@ class ProductListView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final productsAsync = ref.watch(productsProvider);
+    final canManageProducts =
+        ref.watch(currentUserProfileProvider).valueOrNull?.role.canManageProducts ??
+        false;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Productos'),
         actions: [
-          IconButton(
-            onPressed: () async {
-              await context.push('/products/create');
-              if (context.mounted) {
-                await ref.read(productsProvider.notifier).refresh();
-              }
-            },
-            icon: const Icon(Icons.add),
-            tooltip: 'Crear producto',
-          ),
+          if (canManageProducts)
+            IconButton(
+              onPressed: () async {
+                await context.push('/products/create');
+                if (context.mounted) {
+                  await ref.read(productsProvider.notifier).refresh();
+                }
+              },
+              icon: const Icon(Icons.add),
+              tooltip: 'Crear producto',
+            ),
           TextButton(
             onPressed: () async {
               await ref.read(productsProvider.notifier).refresh();
@@ -67,33 +73,34 @@ class ProductListView extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text('€ ${product.price.toStringAsFixed(2)}'),
-                    PopupMenuButton<String>(
-                      onSelected: (value) async {
-                        if (value == 'edit') {
-                          await context.push('/products/edit', extra: product);
-                          if (context.mounted) {
-                            await ref.read(productsProvider.notifier).refresh();
+                    if (canManageProducts)
+                      PopupMenuButton<String>(
+                        onSelected: (value) async {
+                          if (value == 'edit') {
+                            await context.push('/products/edit', extra: product);
+                            if (context.mounted) {
+                              await ref.read(productsProvider.notifier).refresh();
+                            }
                           }
-                        }
 
-                        if (value == 'delete') {
-                          await ref
-                              .read(productsProvider.notifier)
-                              .deleteProduct(product.id);
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Producto eliminado.'),
-                              ),
-                            );
+                          if (value == 'delete') {
+                            await ref
+                                .read(productsProvider.notifier)
+                                .deleteProduct(product.id);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Producto eliminado.'),
+                                ),
+                              );
+                            }
                           }
-                        }
-                      },
-                      itemBuilder: (context) => const [
-                        PopupMenuItem(value: 'edit', child: Text('Editar')),
-                        PopupMenuItem(value: 'delete', child: Text('Eliminar')),
-                      ],
-                    ),
+                        },
+                        itemBuilder: (context) => const [
+                          PopupMenuItem(value: 'edit', child: Text('Editar')),
+                          PopupMenuItem(value: 'delete', child: Text('Eliminar')),
+                        ],
+                      ),
                   ],
                 ),
               ),

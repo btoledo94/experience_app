@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:xpiria_app/feature/auth/presentation/state/auth_provider.dart';
+import 'package:xpiria_app/feature/auth/domain/entity/app_role.dart';
 import 'package:xpiria_app/feature/auth/presentation/view/login_view.dart';
 import 'package:xpiria_app/feature/auth/presentation/view/register_view.dart';
 import 'package:xpiria_app/feature/ecommerce/presentation/view/cart_view.dart';
@@ -11,6 +12,7 @@ import 'package:xpiria_app/feature/ecommerce/presentation/view/ecommerce_view.da
 import 'package:xpiria_app/feature/ecommerce/presentation/view/payment_view.dart';
 import 'package:xpiria_app/feature/ecommerce/presentation/view/create_product_view.dart';
 import 'package:xpiria_app/feature/ecommerce/presentation/view/edit_product_view.dart';
+import 'package:xpiria_app/feature/ecommerce/presentation/view/finance_dashboard_view.dart';
 import 'package:xpiria_app/feature/ecommerce/presentation/view/product_detail_view.dart';
 import 'package:xpiria_app/feature/ecommerce/presentation/view/product_list_view.dart';
 import 'package:xpiria_app/feature/ecommerce/presentation/view/shipping_view.dart';
@@ -20,6 +22,7 @@ import 'package:xpiria_app/feature/ecommerce/domain/entity/product.dart';
 final routerProvider = Provider<GoRouter>((ref) {
   final watchAuthState = ref.watch(watchAuthStateUseCaseProvider);
   final getCurrentAuthUser = ref.watch(getCurrentAuthUserUseCaseProvider);
+  final profileAsync = ref.watch(currentUserProfileProvider);
 
   return GoRouter(
     initialLocation: '/login',
@@ -36,6 +39,25 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       if (isLoggedIn && isAuthRoute) {
         return '/';
+      }
+
+      final profile = profileAsync.valueOrNull;
+      final location = state.matchedLocation;
+
+      if (isLoggedIn && profile != null) {
+        final isProductRoute =
+            location == '/products' ||
+            location == '/products/create' ||
+            location == '/products/edit';
+        final isCheckoutRoute =
+            location == '/cart' ||
+            location == '/checkout/shipping' ||
+            location == '/checkout/payment';
+        final isFinanceRoute = location == '/finance';
+
+        if (isProductRoute && !profile.role.canManageProducts) return '/';
+        if (isCheckoutRoute && !profile.role.canBuy) return '/';
+        if (isFinanceRoute && !profile.role.canViewFinance) return '/';
       }
 
       return null;
@@ -109,6 +131,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/checkout/payment',
         builder: (context, state) => const PaymentView(),
       ),
+      GoRoute(
+        name: Routes.finance,
+        path: '/finance',
+        builder: (context, state) => const FinanceDashboardView(),
+      ),
     ],
   );
 });
@@ -125,6 +152,7 @@ abstract class Routes {
   static const String editProduct = 'editProduct';
   static const String shipping = 'shipping';
   static const String payment = 'payment';
+  static const String finance = 'finance';
 }
 
 class GoRouterRefreshStream extends ChangeNotifier {

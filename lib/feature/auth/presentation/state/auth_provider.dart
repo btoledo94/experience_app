@@ -1,9 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/data_sources/firebase_auth_data_source.dart';
 import '../../data/repository/auth_repository_impl.dart';
 import '../../domain/entity/auth_user.dart';
+import '../../domain/entity/user_profile.dart';
 import '../../domain/repository/auth_repository.dart';
 import '../../domain/use_cases/get_current_auth_user_use_case.dart';
 import '../../domain/use_cases/sign_in_use_case.dart';
@@ -17,7 +19,7 @@ final firebaseAuthProvider = Provider<FirebaseAuth>((ref) {
 
 final authDataSourceProvider = Provider<FirebaseAuthDataSource>((ref) {
   final firebaseAuth = ref.watch(firebaseAuthProvider);
-  return FirebaseAuthDataSource(firebaseAuth);
+  return FirebaseAuthDataSource(firebaseAuth, FirebaseFirestore.instance);
 });
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
@@ -57,6 +59,20 @@ final authStateProvider = StreamProvider<AuthUser?>((ref) {
   return watchAuthState();
 });
 
+final currentUserProfileProvider = StreamProvider<UserProfile?>((ref) {
+  final authState = ref.watch(authStateProvider);
+  final repository = ref.watch(authRepositoryProvider);
+
+  return authState.when(
+    data: (user) {
+      if (user == null) return Stream.value(null);
+      return repository.watchCurrentUserProfile();
+    },
+    loading: () => Stream.value(null),
+    error: (_, _) => Stream.value(null),
+  );
+});
+
 class AuthController extends StateNotifier<AsyncValue<void>> {
   final SignUpUseCase _signUpUseCase;
   final SignInUseCase _signInUseCase;
@@ -65,7 +81,10 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
   AuthController(this._signUpUseCase, this._signInUseCase, this._signOutUseCase)
     : super(const AsyncData(null));
 
-  Future<void> signUp({required String email, required String password}) async {
+  Future<void> signUp({
+    required String email,
+    required String password,
+  }) async {
     state = const AsyncLoading();
     try {
       await _signUpUseCase(email: email, password: password);

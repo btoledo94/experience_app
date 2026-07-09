@@ -1,0 +1,43 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function profilePath() {
+      return /databases/$(database)/documents/usuario_perfil/$(request.auth.token.email);
+    }
+
+    function hasProfile() {
+      return signedIn() && exists(profilePath());
+    }
+
+    function role() {
+      return get(profilePath()).data.rol;
+    }
+
+    function hasRole(expectedRole) {
+      return hasProfile() && role() == expectedRole;
+    }
+
+    match /usuario_perfil/{correo} {
+      allow read: if signedIn() && request.auth.token.email == correo;
+      allow create, update, delete: if false;
+    }
+
+    match /products/{productId} {
+      allow read: if signedIn();
+      allow create, update, delete: if hasRole('admin');
+    }
+
+    match /transactions/{transactionId} {
+      allow create: if signedIn()
+        && (!hasProfile() || hasRole('compras'))
+        && request.resource.data.userId == request.auth.uid;
+      allow read: if hasRole('finanzas');
+      allow update, delete: if false;
+    }
+  }
+}

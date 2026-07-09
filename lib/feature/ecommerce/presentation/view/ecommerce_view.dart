@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:xpiria_app/feature/auth/domain/entity/app_role.dart';
+import 'package:xpiria_app/feature/auth/presentation/state/auth_provider.dart';
 import '../../domain/entity/product.dart';
 import '../state/product_provider.dart';
 import '../widget/ecommerce_app_bar.dart';
@@ -20,6 +22,7 @@ class _EcommerceViewState extends ConsumerState<EcommerceView> {
   @override
   Widget build(BuildContext context) {
     final productsAsync = ref.watch(productsProvider);
+    final role = ref.watch(currentUserProfileProvider).valueOrNull?.role;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -46,7 +49,11 @@ class _EcommerceViewState extends ConsumerState<EcommerceView> {
         onTap: (index) {
           setState(() => _selectedNavIndex = index);
           if (index == 1) {
-            context.push('/products');
+            if (role?.canManageProducts ?? false) {
+              context.push('/products');
+            } else if (role?.canViewFinance ?? false) {
+              context.push('/finance');
+            }
           }
         },
         type: BottomNavigationBarType.fixed,
@@ -54,7 +61,7 @@ class _EcommerceViewState extends ConsumerState<EcommerceView> {
           BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Explore'),
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard),
-            label: 'Categories',
+            label: 'Panel',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.store), label: 'Stores'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),

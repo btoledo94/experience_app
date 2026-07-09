@@ -1,4 +1,5 @@
 import '../../domain/entity/auth_user.dart';
+import '../../domain/entity/user_profile.dart';
 import '../../domain/repository/auth_repository.dart';
 import '../data_sources/firebase_auth_data_source.dart';
 import '../model/auth_user_model.dart';
@@ -21,6 +22,16 @@ class AuthRepositoryImpl implements AuthRepository {
       if (user == null) return null;
       return AuthUserModel.fromFirebaseUser(user).toEntity();
     });
+  }
+
+  @override
+  Stream<UserProfile?> watchCurrentUserProfile() {
+    return _dataSource.watchCurrentUserProfile();
+  }
+
+  @override
+  Future<UserProfile?> getCurrentUserProfile() {
+    return _dataSource.getCurrentUserProfile();
   }
 
   @override

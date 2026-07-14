@@ -50,9 +50,18 @@ class EcommerceAppBar extends ConsumerWidget implements PreferredSizeWidget {
           ),
         if (role?.canViewFinance ?? false)
           IconButton(
-            icon: const Icon(Icons.account_balance_wallet_outlined, color: Colors.black),
+            icon: const Icon(
+              Icons.account_balance_wallet_outlined,
+              color: Colors.black,
+            ),
             tooltip: 'Finanzas',
             onPressed: () => context.go('/finance'),
+          ),
+        if (role?.canBuy ?? false)
+          IconButton(
+            icon: const Icon(Icons.receipt_long_outlined, color: Colors.black),
+            tooltip: 'Mis compras',
+            onPressed: () => context.go('/my-orders'),
           ),
         IconButton(
           icon: const Icon(Icons.logout, color: Colors.black),

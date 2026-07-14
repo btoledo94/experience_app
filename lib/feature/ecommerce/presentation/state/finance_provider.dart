@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../auth/presentation/state/auth_provider.dart';
 import '../../domain/entity/cart_item.dart';
 import '../../domain/entity/order_transaction.dart';
 
@@ -13,6 +14,13 @@ final transactionsProvider = StreamProvider<List<OrderTransaction>>((ref) {
   return repository.watchTransactions();
 });
 
+final myTransactionsProvider = StreamProvider<List<OrderTransaction>>((ref) {
+  final user = ref.watch(authStateProvider).valueOrNull;
+  if (user == null) return Stream.value([]);
+  final repository = ref.watch(financeRepositoryProvider);
+  return repository.watchTransactionsByUser(user.uid);
+});
+
 class FinanceRepository {
   final FirebaseFirestore _firestore;
 
@@ -21,6 +29,19 @@ class FinanceRepository {
   Stream<List<OrderTransaction>> watchTransactions() {
     return _firestore
         .collection('transactions')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => OrderTransaction.fromFirestore(doc.id, doc.data()))
+              .toList(),
+        );
+  }
+
+  Stream<List<OrderTransaction>> watchTransactionsByUser(String userId) {
+    return _firestore
+        .collection('transactions')
+        .where('userId', isEqualTo: userId)
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map(

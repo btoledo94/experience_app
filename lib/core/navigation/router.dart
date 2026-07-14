@@ -13,6 +13,7 @@ import 'package:xpiria_app/feature/ecommerce/presentation/view/payment_view.dart
 import 'package:xpiria_app/feature/ecommerce/presentation/view/create_product_view.dart';
 import 'package:xpiria_app/feature/ecommerce/presentation/view/edit_product_view.dart';
 import 'package:xpiria_app/feature/ecommerce/presentation/view/finance_dashboard_view.dart';
+import 'package:xpiria_app/feature/ecommerce/presentation/view/my_orders_view.dart';
 import 'package:xpiria_app/feature/ecommerce/presentation/view/product_detail_view.dart';
 import 'package:xpiria_app/feature/ecommerce/presentation/view/product_list_view.dart';
 import 'package:xpiria_app/feature/ecommerce/presentation/view/shipping_view.dart';
@@ -55,9 +56,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             location == '/checkout/payment';
         final isFinanceRoute = location == '/finance';
 
+        final isMyOrdersRoute = location == '/my-orders';
+
         if (isProductRoute && !profile.role.canManageProducts) return '/';
         if (isCheckoutRoute && !profile.role.canBuy) return '/';
         if (isFinanceRoute && !profile.role.canViewFinance) return '/';
+        if (isMyOrdersRoute && !profile.role.canBuy) return '/';
       }
 
       return null;
@@ -136,6 +140,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/finance',
         builder: (context, state) => const FinanceDashboardView(),
       ),
+      GoRoute(
+        name: Routes.myOrders,
+        path: '/my-orders',
+        builder: (context, state) => const MyOrdersView(),
+      ),
     ],
   );
 });
@@ -153,6 +162,7 @@ abstract class Routes {
   static const String shipping = 'shipping';
   static const String payment = 'payment';
   static const String finance = 'finance';
+  static const String myOrders = 'myOrders';
 }
 
 class GoRouterRefreshStream extends ChangeNotifier {

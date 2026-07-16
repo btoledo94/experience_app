@@ -32,11 +32,18 @@ service cloud.firestore {
       allow create, update, delete: if hasRole('admin');
     }
 
+    match /shipping_profiles/{userId} {
+      allow read, create, update: if signedIn() && request.auth.uid == userId;
+      allow delete: if false;
+    }
+
     match /transactions/{transactionId} {
       allow create: if signedIn()
         && (!hasProfile() || hasRole('compras'))
         && request.resource.data.userId == request.auth.uid;
-      allow read: if hasRole('finanzas');
+      allow read: if hasRole('finanzas')
+        || ((!hasProfile() || hasRole('compras'))
+          && resource.data.userId == request.auth.uid);
       allow update, delete: if false;
     }
   }

@@ -1,15 +1,18 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
 import 'app_role.dart';
 
-class UserProfile {
-  final String? uid;
-  final String? correo;
-  final AppRole role;
+part 'user_profile.freezed.dart';
 
-  const UserProfile({
-    required this.role,
-    this.uid,
-    this.correo,
-  });
+@freezed
+class UserProfile with _$UserProfile {
+  const UserProfile._();
+
+  const factory UserProfile({
+    required AppRole role,
+    String? uid,
+    String? correo,
+  }) = _UserProfile;
 
   factory UserProfile.fromJson(Map<String, dynamic> json, {String? uid}) {
     return UserProfile(

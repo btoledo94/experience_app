@@ -1,24 +1,27 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:xpiria_app/feature/auth/presentation/state/auth_provider.dart';
 import 'package:xpiria_app/feature/auth/domain/entity/app_role.dart';
+import 'package:xpiria_app/feature/auth/presentation/state/auth_provider.dart';
 import 'package:xpiria_app/feature/auth/presentation/view/login_view.dart';
 import 'package:xpiria_app/feature/auth/presentation/view/register_view.dart';
-import 'package:xpiria_app/feature/ecommerce/presentation/view/cart_view.dart';
-import 'package:xpiria_app/feature/ecommerce/presentation/view/ecommerce_view.dart';
-import 'package:xpiria_app/feature/ecommerce/presentation/view/payment_view.dart';
-import 'package:xpiria_app/feature/ecommerce/presentation/view/create_product_view.dart';
-import 'package:xpiria_app/feature/ecommerce/presentation/view/edit_product_view.dart';
-import 'package:xpiria_app/feature/ecommerce/presentation/view/finance_dashboard_view.dart';
-import 'package:xpiria_app/feature/ecommerce/presentation/view/my_orders_view.dart';
-import 'package:xpiria_app/feature/ecommerce/presentation/view/product_detail_view.dart';
-import 'package:xpiria_app/feature/ecommerce/presentation/view/product_list_view.dart';
-import 'package:xpiria_app/feature/ecommerce/presentation/view/shipping_view.dart';
+import 'package:xpiria_app/feature/cart/presentation/view/cart_view.dart';
+import 'package:xpiria_app/feature/checkout/presentation/view/payment_success_view.dart';
+import 'package:xpiria_app/feature/checkout/presentation/view/payment_view.dart';
+import 'package:xpiria_app/feature/checkout/presentation/view/shipping_view.dart';
+import 'package:xpiria_app/feature/finance/presentation/view/finance_dashboard_view.dart';
+import 'package:xpiria_app/feature/home/presentation/view/ecommerce_view.dart';
 import 'package:xpiria_app/feature/onboarding/presentation/view/onboarding_view.dart';
-import 'package:xpiria_app/feature/ecommerce/domain/entity/product.dart';
+import 'package:xpiria_app/feature/products/domain/entity/product.dart';
+import 'package:xpiria_app/feature/products/presentation/view/create_product_view.dart';
+import 'package:xpiria_app/feature/products/presentation/view/edit_product_view.dart';
+import 'package:xpiria_app/feature/products/presentation/view/product_detail_view.dart';
+import 'package:xpiria_app/feature/products/presentation/view/product_list_view.dart';
+import 'package:xpiria_app/feature/transactions/domain/entity/order_transaction.dart';
+import 'package:xpiria_app/feature/transactions/presentation/view/my_purchases_view.dart';
+import 'package:xpiria_app/feature/transactions/presentation/view/transaction_detail_view.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final watchAuthState = ref.watch(watchAuthStateUseCaseProvider);
@@ -53,15 +56,20 @@ final routerProvider = Provider<GoRouter>((ref) {
         final isCheckoutRoute =
             location == '/cart' ||
             location == '/checkout/shipping' ||
-            location == '/checkout/payment';
+            location == '/checkout/payment' ||
+            location == '/checkout/success';
         final isFinanceRoute = location == '/finance';
-
-        final isMyOrdersRoute = location == '/my-orders';
+        final isMyPurchasesRoute = location == '/my-purchases';
+        final isTransactionDetailRoute = location == '/transaction-detail';
 
         if (isProductRoute && !profile.role.canManageProducts) return '/';
         if (isCheckoutRoute && !profile.role.canBuy) return '/';
         if (isFinanceRoute && !profile.role.canViewFinance) return '/';
-        if (isMyOrdersRoute && !profile.role.canBuy) return '/';
+        if (isMyPurchasesRoute && !profile.role.canBuy) return '/';
+        if (isTransactionDetailRoute &&
+            !(profile.role.canBuy || profile.role.canViewFinance)) {
+          return '/';
+        }
       }
 
       return null;
@@ -94,7 +102,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           final extra = state.extra as Map<String, dynamic>?;
           return ProductDetailView(
             productName: extra?['name'] as String? ?? 'Product',
-            productPrice: extra?['price'] as String? ?? '€ 0.00',
+            productPrice: extra?['price'] as String? ?? '\$0.00',
             productDescription: extra?['description'] as String? ?? '',
             productImageUrl: extra?['imageUrl'] as String? ?? '',
             productColors: List<String>.from(extra?['colors'] ?? []),
@@ -136,14 +144,45 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const PaymentView(),
       ),
       GoRoute(
+        name: Routes.paymentSuccess,
+        path: '/checkout/success',
+        builder: (context, state) {
+          return PaymentSuccessView(
+            transaction: state.extra as OrderTransaction?,
+          );
+        },
+      ),
+      GoRoute(
         name: Routes.finance,
         path: '/finance',
         builder: (context, state) => const FinanceDashboardView(),
       ),
       GoRoute(
-        name: Routes.myOrders,
-        path: '/my-orders',
-        builder: (context, state) => const MyOrdersView(),
+        name: Routes.myPurchases,
+        path: '/my-purchases',
+        builder: (context, state) => const MyPurchasesView(),
+      ),
+      GoRoute(
+        name: Routes.transactionDetail,
+        path: '/transaction-detail',
+        builder: (context, state) {
+          final extra = state.extra;
+          final transaction = extra is Map
+              ? extra['transaction'] as OrderTransaction?
+              : extra as OrderTransaction?;
+          final backToHome = extra is Map
+              ? extra['backToHome'] as bool? ?? false
+              : false;
+
+          if (transaction == null) {
+            return const TransactionDetailView.empty();
+          }
+
+          return TransactionDetailView(
+            transaction: transaction,
+            backToHome: backToHome,
+          );
+        },
       ),
     ],
   );
@@ -161,8 +200,10 @@ abstract class Routes {
   static const String editProduct = 'editProduct';
   static const String shipping = 'shipping';
   static const String payment = 'payment';
+  static const String paymentSuccess = 'paymentSuccess';
   static const String finance = 'finance';
-  static const String myOrders = 'myOrders';
+  static const String myPurchases = 'myPurchases';
+  static const String transactionDetail = 'transactionDetail';
 }
 
 class GoRouterRefreshStream extends ChangeNotifier {

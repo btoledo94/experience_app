@@ -3,7 +3,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'payment_card.freezed.dart';
 
 @freezed
-class PaymentCard with _$PaymentCard {
+abstract class PaymentCard with _$PaymentCard {
   const PaymentCard._();
 
   const factory PaymentCard({

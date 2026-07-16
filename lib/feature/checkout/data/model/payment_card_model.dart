@@ -4,7 +4,7 @@ import 'package:xpiria_app/feature/checkout/domain/entity/payment_card.dart';
 part 'payment_card_model.freezed.dart';
 
 @freezed
-class PaymentCardModel with _$PaymentCardModel {
+abstract class PaymentCardModel with _$PaymentCardModel {
   const PaymentCardModel._();
 
   const factory PaymentCardModel({

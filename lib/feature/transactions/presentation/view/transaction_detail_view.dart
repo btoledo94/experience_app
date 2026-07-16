@@ -15,11 +15,10 @@ class TransactionDetailView extends StatelessWidget {
 
   const TransactionDetailView({
     super.key,
-    required OrderTransaction transaction,
+    required OrderTransaction this.transaction,
     this.backToHome = false,
   })
-    : transaction = transaction,
-      isEmpty = false;
+    : isEmpty = false;
 
   const TransactionDetailView.empty({super.key})
     : transaction = null,

@@ -5,7 +5,7 @@ import 'app_role.dart';
 part 'user_profile.freezed.dart';
 
 @freezed
-class UserProfile with _$UserProfile {
+abstract class UserProfile with _$UserProfile {
   const UserProfile._();
 
   const factory UserProfile({

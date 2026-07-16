@@ -4,7 +4,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'order_transaction.freezed.dart';
 
 @freezed
-class OrderTransaction with _$OrderTransaction {
+abstract class OrderTransaction with _$OrderTransaction {
   const factory OrderTransaction({
     required String id,
     required String userId,
@@ -45,7 +45,7 @@ class OrderTransaction with _$OrderTransaction {
 }
 
 @freezed
-class OrderTransactionItem with _$OrderTransactionItem {
+abstract class OrderTransactionItem with _$OrderTransactionItem {
   const factory OrderTransactionItem({
     required String id,
     required String name,

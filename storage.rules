@@ -1,0 +1,30 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && firestore.exists(
+          /databases/(default)/documents/usuario_perfil/$(request.auth.token.email)
+        )
+        && firestore.get(
+          /databases/(default)/documents/usuario_perfil/$(request.auth.token.email)
+        ).data.rol == 'admin';
+    }
+
+    // Productos: lectura para usuarios autenticados y escritura solo admin
+    match /products/{productId}/{allPaths=**} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    // Bloquea cualquier otra ruta no declarada
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

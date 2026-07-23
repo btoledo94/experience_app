@@ -1,6 +1,9 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'package:xpiria_app/feature/products/domain/entity/product.dart';
 import '../state/product_provider.dart';
@@ -22,6 +25,11 @@ class _EditProductViewState extends ConsumerState<EditProductView> {
   late final TextEditingController _imageUrlController;
   late final TextEditingController _colorsController;
   late final TextEditingController _sizesController;
+  final _imagePicker = ImagePicker();
+
+  Uint8List? _selectedImageBytes;
+  String? _selectedImageName;
+  bool _isUploadingImage = false;
 
   String? _validateOptionalImageUrl(String? value) {
     final input = value?.trim() ?? '';
@@ -71,6 +79,24 @@ class _EditProductViewState extends ConsumerState<EditProductView> {
     super.dispose();
   }
 
+  Future<void> _pickImage() async {
+    final picked = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+      maxWidth: 1800,
+    );
+
+    if (picked == null) return;
+
+    final bytes = await picked.readAsBytes();
+    if (!mounted) return;
+
+    setState(() {
+      _selectedImageBytes = bytes;
+      _selectedImageName = picked.name;
+    });
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -96,6 +122,32 @@ class _EditProductViewState extends ConsumerState<EditProductView> {
         .where((e) => e.isNotEmpty)
         .toList();
 
+    var finalImageUrl = _imageUrlController.text.trim();
+    if (_selectedImageBytes != null && _selectedImageName != null) {
+      setState(() => _isUploadingImage = true);
+      try {
+        finalImageUrl = await ref
+            .read(productsProvider.notifier)
+            .uploadProductImage(
+              bytes: _selectedImageBytes!,
+              fileName: _selectedImageName!,
+              productId: widget.product.id,
+            );
+      } catch (_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No se pudo subir la imagen a Firebase Storage.'),
+          ),
+        );
+        setState(() => _isUploadingImage = false);
+        return;
+      }
+
+      if (!mounted) return;
+      setState(() => _isUploadingImage = false);
+    }
+
     await ref
         .read(productsProvider.notifier)
         .updateProduct(
@@ -103,7 +155,7 @@ class _EditProductViewState extends ConsumerState<EditProductView> {
           name: _nameController.text.trim(),
           description: _descriptionController.text.trim(),
           price: price,
-          imageUrl: _imageUrlController.text.trim(),
+          imageUrl: finalImageUrl,
           colors: colors,
           sizes: sizes,
         );
@@ -118,6 +170,7 @@ class _EditProductViewState extends ConsumerState<EditProductView> {
   @override
   Widget build(BuildContext context) {
     final isLoading = ref.watch(productsProvider).isLoading;
+    final isBusy = isLoading || _isUploadingImage;
 
     return Scaffold(
       appBar: AppBar(
@@ -175,6 +228,62 @@ class _EditProductViewState extends ConsumerState<EditProductView> {
                 validator: _validateOptionalImageUrl,
               ),
               const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: isBusy ? null : _pickImage,
+                  icon: const Icon(Icons.add_photo_alternate_outlined),
+                  label: const Text('Seleccionar imagen desde galeria'),
+                ),
+              ),
+              if (_selectedImageName != null) ...[
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Archivo: $_selectedImageName',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 12),
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _imageUrlController,
+                builder: (context, value, _) {
+                  final imageUrl = value.text.trim();
+                  final hasNetworkImage = imageUrl.startsWith('http');
+                  final hasSelectedImage = _selectedImageBytes != null;
+
+                  if (!hasNetworkImage && !hasSelectedImage) {
+                    return const SizedBox.shrink();
+                  }
+
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 180,
+                      child: hasSelectedImage
+                          ? Image.memory(
+                              _selectedImageBytes!,
+                              fit: BoxFit.cover,
+                            )
+                          : Image.network(
+                              imageUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return const Center(
+                                  child: Text(
+                                    'No se pudo cargar la imagen URL',
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
               TextFormField(
                 controller: _colorsController,
                 decoration: const InputDecoration(
@@ -193,8 +302,8 @@ class _EditProductViewState extends ConsumerState<EditProductView> {
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: isLoading ? null : _submit,
-                  child: isLoading
+                  onPressed: isBusy ? null : _submit,
+                  child: isBusy
                       ? const CircularProgressIndicator()
                       : const Text('Guardar cambios'),
                 ),

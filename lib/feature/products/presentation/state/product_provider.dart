@@ -1,8 +1,12 @@
+import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:xpiria_app/feature/products/data/data_sources/product_local_data_source.dart';
 import 'package:xpiria_app/feature/products/data/data_sources/product_remote_data_source.dart';
+import 'package:xpiria_app/feature/products/data/data_sources/product_storage_data_source.dart';
 import 'package:xpiria_app/feature/products/data/repository/product_repository_impl.dart';
 import 'package:xpiria_app/feature/products/domain/entity/product.dart';
 import 'package:xpiria_app/feature/products/domain/repository/product_repository.dart';
@@ -13,7 +17,13 @@ final productRepositoryProvider = FutureProvider<ProductRepository>((
   final prefs = await SharedPreferences.getInstance();
   final localDataSource = ProductLocalDataSource();
   final remoteDataSource = ProductRemoteDataSource(FirebaseFirestore.instance);
-  final repo = ProductRepositoryImpl(prefs, localDataSource, remoteDataSource);
+  final storageDataSource = ProductStorageDataSource(FirebaseStorage.instance);
+  final repo = ProductRepositoryImpl(
+    prefs,
+    localDataSource,
+    remoteDataSource,
+    storageDataSource,
+  );
   await repo.initializeDefaultProducts();
   return repo;
 });
@@ -128,6 +138,23 @@ class ProductsNotifier extends AsyncNotifier<List<Product>> {
       final current = previous.value ?? await repo.loadProducts();
       return current.where((p) => p.id != productId).toList();
     });
+  }
+
+  Future<String> uploadProductImage({
+    required Uint8List bytes,
+    required String fileName,
+    String? productId,
+  }) async {
+    final repo = await ref.read(productRepositoryProvider.future);
+    final resolvedProductId = (productId == null || productId.isEmpty)
+        ? 'tmp_${DateTime.now().millisecondsSinceEpoch}'
+        : productId;
+
+    return repo.uploadProductImage(
+      productId: resolvedProductId,
+      bytes: bytes,
+      fileName: fileName,
+    );
   }
 }
 

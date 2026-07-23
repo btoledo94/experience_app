@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:xpiria_app/feature/products/data/data_sources/product_local_data_source.dart';
 import 'package:xpiria_app/feature/products/data/data_sources/product_remote_data_source.dart';
+import 'package:xpiria_app/feature/products/data/data_sources/product_storage_data_source.dart';
 import 'package:xpiria_app/feature/products/domain/entity/product.dart';
 import 'package:xpiria_app/feature/products/domain/repository/product_repository.dart';
 import '../model/product_model.dart';
@@ -11,11 +13,13 @@ class ProductRepositoryImpl implements ProductRepository {
   final SharedPreferences _prefs;
   final ProductLocalDataSource _localDataSource;
   final ProductRemoteDataSource _remoteDataSource;
+  final ProductStorageDataSource _storageDataSource;
 
   ProductRepositoryImpl(
     this._prefs,
     this._localDataSource,
     this._remoteDataSource,
+    this._storageDataSource,
   );
 
   @override
@@ -99,6 +103,19 @@ class ProductRepositoryImpl implements ProductRepository {
     if (existing.isEmpty) {
       await saveProducts(_defaultProducts);
     }
+  }
+
+  @override
+  Future<String> uploadProductImage({
+    required String productId,
+    required Uint8List bytes,
+    required String fileName,
+  }) {
+    return _storageDataSource.uploadProductImage(
+      productId: productId,
+      bytes: bytes,
+      fileName: fileName,
+    );
   }
 
   List<Product> get _defaultProducts => [

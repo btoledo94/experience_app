@@ -5,6 +5,7 @@ import 'package:xpiria_app/feature/auth/domain/entity/app_role.dart';
 import 'package:xpiria_app/feature/auth/presentation/state/auth_provider.dart';
 import 'package:xpiria_app/feature/products/domain/entity/product.dart';
 import 'package:xpiria_app/feature/products/presentation/state/product_provider.dart';
+import 'package:xpiria_app/core/notifications/notification_service.dart';
 import '../widget/ecommerce_app_bar.dart';
 import '../widget/product_carousel.dart';
 import '../widget/product_section.dart';
@@ -27,6 +28,17 @@ class _EcommerceViewState extends ConsumerState<EcommerceView> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: const EcommerceAppBar(),
+      floatingActionButton: FloatingActionButton(
+        tooltip: 'Probar notificacion local',
+        onPressed: () async {
+          await NotificationService.instance.showLocalNotification(
+            title: 'Oferta especial',
+            body: 'Tu notificacion local de Xpiria funciona correctamente.',
+            payload: '/',
+          );
+        },
+        child: const Icon(Icons.notifications_active_outlined),
+      ),
       body: SafeArea(
         child: productsAsync.when(
           data: (products) => SingleChildScrollView(

@@ -39,6 +39,18 @@ class TransactionsRemoteDataSource {
         });
   }
 
+  Future<OrderTransaction?> getTransactionById(String transactionId) async {
+    final doc = await firestore
+        .collection('transactions')
+        .doc(transactionId)
+        .get();
+    final data = doc.data();
+
+    if (!doc.exists || data == null) return null;
+
+    return OrderTransaction.fromFirestore(doc.id, data);
+  }
+
   Future<OrderTransaction> recordApprovedTransaction({
     required String userId,
     required double amount,
@@ -95,7 +107,10 @@ class TransactionsRemoteDataSource {
   }
 
   Future<Map<String, String?>> _loadShippingProfile(String userId) async {
-    final doc = await firestore.collection('shipping_profiles').doc(userId).get();
+    final doc = await firestore
+        .collection('shipping_profiles')
+        .doc(userId)
+        .get();
     final data = doc.data() ?? {};
 
     return {

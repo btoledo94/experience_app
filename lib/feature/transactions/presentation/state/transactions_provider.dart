@@ -17,6 +17,13 @@ final transactionsProvider = StreamProvider<List<OrderTransaction>>((ref) {
   return repository.watchTransactions();
 });
 
+final transactionByIdProvider = FutureProvider.autoDispose
+    .family<OrderTransaction?, String>((ref, transactionId) {
+      return ref
+          .watch(transactionsRepositoryProvider)
+          .getTransactionById(transactionId);
+    });
+
 final myTransactionsProvider = StreamProvider<List<OrderTransaction>>((ref) {
   final repository = ref.watch(transactionsRepositoryProvider);
   final user = ref.watch(authStateProvider).valueOrNull;

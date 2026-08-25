@@ -19,6 +19,11 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
   }
 
   @override
+  Future<OrderTransaction?> getTransactionById(String transactionId) {
+    return remoteDataSource.getTransactionById(transactionId);
+  }
+
+  @override
   Future<OrderTransaction> recordApprovedTransaction({
     required String userId,
     required double amount,

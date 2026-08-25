@@ -20,6 +20,7 @@ void main() async {
   // Crear un container para inicializar el carrito
   final container = ProviderContainer();
   await container.read(cartProvider.notifier).initialize(prefs);
+  NotificationService.instance.attachRouter(container.read(routerProvider));
 
   runApp(
     UncontrolledProviderScope(container: container, child: const MainApp()),

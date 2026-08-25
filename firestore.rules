@@ -37,6 +37,11 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /user_devices/{userId} {
+      allow read, create, update: if signedIn() && request.auth.uid == userId;
+      allow delete: if false;
+    }
+
     match /transactions/{transactionId} {
       allow create: if signedIn()
         && (!hasProfile() || hasRole('compras'))

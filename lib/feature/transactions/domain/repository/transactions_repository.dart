@@ -4,6 +4,7 @@ import 'package:xpiria_app/feature/transactions/domain/entity/order_transaction.
 abstract class TransactionsRepository {
   Stream<List<OrderTransaction>> watchTransactions();
   Stream<List<OrderTransaction>> watchTransactionsByUser(String userId);
+  Future<OrderTransaction?> getTransactionById(String transactionId);
 
   Future<OrderTransaction> recordApprovedTransaction({
     required String userId,

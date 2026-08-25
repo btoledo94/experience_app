@@ -21,6 +21,7 @@ import 'package:xpiria_app/feature/products/presentation/view/product_detail_vie
 import 'package:xpiria_app/feature/products/presentation/view/product_list_view.dart';
 import 'package:xpiria_app/feature/transactions/domain/entity/order_transaction.dart';
 import 'package:xpiria_app/feature/transactions/presentation/view/my_purchases_view.dart';
+import 'package:xpiria_app/feature/transactions/presentation/view/transaction_detail_loader_view.dart';
 import 'package:xpiria_app/feature/transactions/presentation/view/transaction_detail_view.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -60,7 +61,9 @@ final routerProvider = Provider<GoRouter>((ref) {
             location == '/checkout/success';
         final isFinanceRoute = location == '/finance';
         final isMyPurchasesRoute = location == '/my-purchases';
-        final isTransactionDetailRoute = location == '/transaction-detail';
+        final isTransactionDetailRoute =
+            location == '/transaction-detail' ||
+            location.startsWith('/transaction-detail/');
 
         if (isProductRoute && !profile.role.canManageProducts) return '/';
         if (isCheckoutRoute && !profile.role.canBuy) return '/';
@@ -184,6 +187,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
+      GoRoute(
+        name: Routes.transactionDetailById,
+        path: '/transaction-detail/:transactionId',
+        builder: (context, state) => TransactionDetailLoaderView(
+          transactionId: state.pathParameters['transactionId']!,
+        ),
+      ),
     ],
   );
 });
@@ -204,6 +214,7 @@ abstract class Routes {
   static const String finance = 'finance';
   static const String myPurchases = 'myPurchases';
   static const String transactionDetail = 'transactionDetail';
+  static const String transactionDetailById = 'transactionDetailById';
 }
 
 class GoRouterRefreshStream extends ChangeNotifier {

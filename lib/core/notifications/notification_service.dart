@@ -31,7 +31,14 @@ class NotificationService {
   GoRouter? _router;
   String? _pendingRoute;
 
+  void _log(String message) {
+    developer.log(message, name: 'NotificationService');
+    debugPrint('[NotificationService] $message');
+  }
+
   Future<void> initialize() async {
+    _log('Initializing notifications.');
+    await _messaging.setAutoInitEnabled(true);
     await _initializeLocalNotifications();
     await _requestPermission();
 
@@ -50,7 +57,10 @@ class NotificationService {
       _handleNotificationTap(initialMessage);
     }
 
-    _auth.authStateChanges().listen(_registerTokenForUser);
+    _auth.authStateChanges().listen((user) {
+      _log('Authentication changed. uid=${user?.uid ?? 'none'}');
+      unawaited(_registerTokenForUser(user));
+    });
     _messaging.onTokenRefresh.listen(_saveToken);
     await _registerTokenForUser(_auth.currentUser);
   }
@@ -90,12 +100,13 @@ class NotificationService {
   }
 
   Future<void> _requestPermission() async {
-    await _messaging.requestPermission(
+    final settings = await _messaging.requestPermission(
       alert: true,
       badge: true,
       sound: true,
       provisional: false,
     );
+    _log('Notification permission: ${settings.authorizationStatus.name}');
 
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       await _localNotifications
@@ -165,16 +176,51 @@ class NotificationService {
   }
 
   Future<void> _registerTokenForUser(User? user) async {
-    if (user == null) return;
-
-    try {
-      final token = await _messaging.getToken();
-      if (token != null) await _saveToken(token);
-    } on FirebaseException catch (error) {
-      developer.log(
-        'The FCM token is not available yet: ${error.message}',
-        name: 'NotificationService',
+    if (user == null) {
+      _log(
+        'Token registration skipped because there is no authenticated user.',
       );
+      return;
+    }
+
+    _log('Requesting FCM token for user ${user.uid}.');
+
+    String? token;
+    for (var attempt = 1; attempt <= 3 && token == null; attempt++) {
+      try {
+        token = await _messaging.getToken();
+      } on FirebaseException catch (error, stackTrace) {
+        final message =
+            'Could not get the FCM token '
+            '(attempt $attempt/3, code=${error.code}, '
+            'plugin=${error.plugin}, message=${error.message ?? 'none'}).';
+        _log(message);
+        developer.log(
+          message,
+          name: 'NotificationService',
+          error: error,
+          stackTrace: stackTrace,
+        );
+      } catch (error, stackTrace) {
+        _log('Unexpected error getting the FCM token (attempt $attempt/3).');
+        developer.log(
+          'Unexpected error getting the FCM token (attempt $attempt/3).',
+          name: 'NotificationService',
+          error: error,
+          stackTrace: stackTrace,
+        );
+      }
+
+      if (token == null && attempt < 3) {
+        await Future<void>.delayed(Duration(seconds: attempt * 2));
+      }
+    }
+
+    if (token == null) {
+      _log('The FCM token is still unavailable after 3 attempts.');
+    } else {
+      _log('FCM returned a token; saving it in Firestore.');
+      await _saveToken(token);
     }
 
     final pendingRoute = _pendingRoute;
@@ -185,11 +231,24 @@ class NotificationService {
     final user = _auth.currentUser;
     if (user == null) return;
 
-    await _firestore.collection('user_devices').doc(user.uid).set({
-      'fcmTokens': FieldValue.arrayUnion([token]),
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
-    developer.log('FCM token registered.', name: 'NotificationService');
+    try {
+      await _firestore.collection('user_devices').doc(user.uid).set({
+        'fcmTokens': FieldValue.arrayUnion([token]),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      _log('FCM token registered for user ${user.uid}.');
+    } on FirebaseException catch (error, stackTrace) {
+      final message =
+          'Could not save the FCM token in Firestore '
+          '(code=${error.code}, message=${error.message ?? 'none'}).';
+      _log(message);
+      developer.log(
+        message,
+        name: 'NotificationService',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
   }
 
   void _openRoute(String? route) {

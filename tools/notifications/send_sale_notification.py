@@ -97,18 +97,31 @@ def send_sale_notification(sale_id: str, dry_run: bool = False) -> None:
         success_count += response.success_count
         failure_count += response.failure_count
 
-        for token, result in zip(token_group, response.responses):
-            error_code = getattr(result.exception, "code", None)
-            if not result.success and error_code in {
-                "registration-token-not-registered",
-                "sender-id-mismatch",
-            }:
+        for index, (token, result) in enumerate(
+            zip(token_group, response.responses), start=1
+        ):
+            if result.success:
+                continue
+
+            exception = result.exception
+            error_code = getattr(exception, "code", None)
+            print(
+                "FCM rechazo el token "
+                f"#{index}: tipo={type(exception).__name__}, "
+                f"codigo={error_code}, detalle={exception}"
+            )
+
+            if isinstance(
+                exception,
+                (messaging.UnregisteredError, messaging.SenderIdMismatchError),
+            ):
                 invalid_tokens.append(token)
 
     if invalid_tokens:
         database.collection("user_devices").document(user_id).update(
             {"fcmTokens": firestore.ArrayRemove(invalid_tokens)}
         )
+        print(f"Se eliminaron {len(invalid_tokens)} tokens FCM invalidos.")
 
     print(f"Envio terminado: {success_count} exitosos, {failure_count} fallidos")
 

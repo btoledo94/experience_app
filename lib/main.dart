@@ -20,7 +20,6 @@ void main() async {
   // Crear un container para inicializar el carrito
   final container = ProviderContainer();
   await container.read(cartProvider.notifier).initialize(prefs);
-  NotificationService.instance.attachRouter(container.read(routerProvider));
 
   runApp(
     UncontrolledProviderScope(container: container, child: const MainApp()),
@@ -32,9 +31,12 @@ class MainApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(routerProvider);
+    NotificationService.instance.attachRouter(router);
+
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      routerConfig: ref.watch(routerProvider),
+      routerConfig: router,
     );
   }
 }

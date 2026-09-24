@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:xpiria_app/feature/auth/presentation/state/auth_provider.dart';
+import 'package:xpiria_app/core/notifications/notification_service.dart';
 import 'package:xpiria_app/feature/cart/presentation/state/cart_provider.dart';
 import 'package:xpiria_app/feature/checkout/domain/entity/payment_card.dart';
 import 'package:xpiria_app/feature/transactions/presentation/state/transactions_provider.dart';
@@ -163,6 +166,18 @@ class _PaymentViewState extends ConsumerState<PaymentView> {
                     message: result.message,
                     items: cartState.items,
                   );
+
+        if (!mounted) return;
+
+        if (transaction != null) {
+          unawaited(
+            NotificationService.instance.sendPurchaseNotification(
+              transactionId: transaction.id,
+              amount: transaction.amount,
+              currency: transaction.currency,
+            ),
+          );
+        }
 
         ref.read(cartProvider.notifier).clearCart();
         context.go('/checkout/success', extra: transaction);

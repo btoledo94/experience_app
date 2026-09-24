@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:go_router/go_router.dart';
 import 'package:xpiria_app/firebase_options.dart';
@@ -70,7 +72,12 @@ class NotificationService {
     final pendingRoute = _pendingRoute;
     if (pendingRoute != null && _auth.currentUser != null) {
       _pendingRoute = null;
-      router.go(pendingRoute);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_router == router && _auth.currentUser != null) {
+          _log('Opening pending notification route: $pendingRoute');
+          router.go(pendingRoute);
+        }
+      });
     }
   }
 
@@ -165,6 +172,52 @@ class NotificationService {
     );
   }
 
+  Future<void> sendPurchaseNotification({
+    required String transactionId,
+    required double amount,
+    required String currency,
+  }) async {
+    if (!kDebugMode) return;
+
+    try {
+      final token = await _messaging.getToken();
+      if (token == null || token.isEmpty) {
+        _log('Purchase notification skipped because the FCM token is missing.');
+        return;
+      }
+
+      const configuredHost = String.fromEnvironment('LOCAL_FUNCTIONS_HOST');
+      final host = configuredHost.isNotEmpty
+          ? configuredHost
+          : (!kIsWeb && defaultTargetPlatform == TargetPlatform.android
+                ? '10.0.2.2'
+                : '127.0.0.1');
+      final endpoint =
+          'http://$host:5001/ecommerce-3a44a/us-central1/'
+          'purchase_notification';
+
+      await Dio().post<void>(
+        endpoint,
+        data: {
+          'token': token,
+          'transactionId': transactionId,
+          'amount': amount,
+          'currency': currency,
+        },
+        options: Options(contentType: Headers.jsonContentType),
+      );
+      _log('Purchase notification requested for $transactionId.');
+    } catch (error, stackTrace) {
+      _log('Purchase saved, but its local notification could not be sent.');
+      developer.log(
+        'Could not request the local purchase notification.',
+        name: 'NotificationService',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
   void _handleNotificationTap(RemoteMessage message) {
     final transactionId =
         message.data['transactionId'] ?? message.data['saleId'];
@@ -220,6 +273,7 @@ class NotificationService {
       _log('The FCM token is still unavailable after 3 attempts.');
     } else {
       _log('FCM returned a token; saving it in Firestore.');
+      if (kDebugMode) debugPrint('[NotificationService] FCM token: $token');
       await _saveToken(token);
     }
 
@@ -252,13 +306,18 @@ class NotificationService {
   }
 
   void _openRoute(String? route) {
-    if (route == null || !route.startsWith('/transaction-detail/')) return;
+    if (route == null || !route.startsWith('/transaction-detail/')) {
+      _log('Notification route ignored: ${route ?? 'none'}');
+      return;
+    }
     if (_auth.currentUser == null || _router == null) {
+      _log('Notification route queued until authentication is ready: $route');
       _pendingRoute = route;
       return;
     }
 
     _pendingRoute = null;
+    _log('Opening notification route: $route');
     _router!.go(route);
   }
 }
